@@ -1,0 +1,41 @@
+{
+  "recommendations": [
+    // Biome - Linting and Formatting
+    "biomejs.biome",
+
+    // TypeScript and JavaScript
+    "dbaeumer.vscode-eslint",
+
+    // React and Next.js
+    "dsznajder.es7-react-js-snippets",
+
+    // Tailwind CSS
+    "bradlc.vscode-tailwindcss",
+
+    // Prisma
+    "prisma.prisma",
+
+    // Git
+    "eamodio.gitlens",
+    "github.vscode-pull-request-github",
+
+    // Docker (if needed)
+    "ms-azuretools.vscode-docker",
+
+    // Database
+    "mtxr.sqltools",
+
+    // Code Quality
+    "usernamehw.errorlens",
+    "streetsidesoftware.code-spell-checker",
+
+    // Productivity
+    "christian-kohler.path-intellisense",
+    "visualstudioexptteam.vscodeintellicode",
+    "gruntfuggly.todo-tree"
+  ],
+  "unwantedRecommendations": [
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint"
+  ]
+}

@@ -1,0 +1,2 @@
+pnpm db:check-migration
+npx lint-staged

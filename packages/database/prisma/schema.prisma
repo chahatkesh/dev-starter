@@ -1,0 +1,150 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+//////////////////////////
+// ENUMS
+//////////////////////////
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+//////////////////////////
+// USERS & AUTH
+//////////////////////////
+
+model User {
+  id            String        @id @default(uuid())
+  email         String        @unique
+  passwordHash  String
+  name          String
+  avatarUrl     String?
+  
+  // Account Management
+  status        AccountStatus @default(ACTIVE)
+  emailVerified Boolean       @default(false)
+  lastLoginAt   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  sessions       Session[]
+  loginHistory   LoginHistory[]
+  auditLogs      AuditLog[]
+  activityEvents ActivityEvent[]
+
+  @@index([email])
+  @@index([status])
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  ip        String?
+  userAgent String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model LoginHistory {
+  id            String   @id @default(uuid())
+  userId        String
+
+  // Device & Location Info
+  ip            String?
+  userAgent     String?
+  device        String?
+  browser       String?
+  os            String?
+  city          String?
+  country       String?
+  latitude      Float?
+  longitude     Float?
+
+  // Status
+  success       Boolean  @default(true)
+  failureReason String?
+
+  createdAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([success])
+}
+
+//////////////////////////
+// ACTIVITY TRACKING
+//////////////////////////
+
+model ActivityEvent {
+  id        String   @id @default(uuid())
+  userId    String?
+
+  // Event Details
+  eventType String   // PAGE_VIEW, SEARCH, CLICK, etc.
+  page      String?
+  action    String?
+  metadata  Json?
+
+  // Device & Location
+  ip        String?
+  userAgent String?
+  device    String?
+  browser   String?
+
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([eventType])
+  @@index([createdAt])
+}
+
+//////////////////////////
+// AUDIT LOGGING
+//////////////////////////
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+
+  // Action Details
+  action     String   // USER_CREATED, PROFILE_UPDATED, etc.
+  resource   String   // User, Post, etc.
+  resourceId String?
+
+  // Change Details
+  changes    Json?    // Before/after values
+  metadata   Json?
+
+  // Request Info
+  ip         String?
+  userAgent  String?
+
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+  @@index([createdAt])
+}
+
+

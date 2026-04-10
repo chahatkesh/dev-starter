@@ -1,0 +1,35 @@
+procs:
+  # Database (PostgreSQL via Docker)
+  database:
+    shell: "pnpm docker:dev"
+    cwd: "."
+    autostart: true
+    autorestart: false
+    stop: "SIGTERM"
+
+  # Main Next.js application
+  main-app:
+    shell: "pnpm dev:pretty"
+    cwd: "."
+    autostart: true
+    autorestart: true
+    stop: "SIGTERM"
+
+  # Landing page application
+  landing-app:
+    shell: "pnpm dev"
+    cwd: "./landing"
+    autostart: true
+    autorestart: true
+    stop: "SIGTERM"
+
+  # Database Studio (Prisma Studio for viewing data)
+  database-studio:
+    shell: "pnpm db:studio"
+    cwd: "."
+    autostart: false
+    autorestart: false
+    stop: "SIGTERM"
+
+# Optional: Add environment-specific configurations
+# You can override these in mprocs.local.yaml (git-ignored)

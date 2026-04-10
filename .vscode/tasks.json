@@ -1,0 +1,53 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Decrypt Local Secrets",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["secrets:decrypt"],
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared",
+        "showReuseMessage": false,
+        "close": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Decrypt Staging Secrets",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["secrets:decrypt:staging"],
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared",
+        "showReuseMessage": false,
+        "close": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Decrypt Production Secrets",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["secrets:decrypt:production"],
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared",
+        "showReuseMessage": false,
+        "close": true
+      },
+      "problemMatcher": []
+    }
+  ]
+}
