@@ -1,0 +1,12 @@
+# <type>(<optional-scope>): <imperative summary>
+#
+# Why is this change needed? What important constraint or trade-off matters?
+# Keep body lines readable and omit the body for truly self-explanatory changes.
+#
+# Refs #123
+# Closes #123
+# BREAKING CHANGE: describe an actual incompatible contract and migration path
+#
+# Allowed types: feat, fix, refactor, perf, test, docs, build, ci, chore, revert
+# Common scopes: app, api, engine, location, timezone, database, workers,
+# services, infra, ci, deps, agents, docs
