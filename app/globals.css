@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+:root {
+  --canvas: #0b0b0b;
+  --canvas-soft: #212121;
+  --canvas-light: #ffffff;
+  --ink: #0b0b0b;
+  --brand: #f36458;
+  --on-primary: #ffffff;
+  --ash: #b9b9b9;
+  --mute: #797979;
+  --graphite: #353535;
+  --hairline-soft: #353535;
+  --hairline: #ededed;
+  --background: var(--canvas-light);
+  --foreground: var(--ink);
+  --muted: #797979;
+  --accent: var(--brand);
+  --accent-foreground: var(--ink);
+  --border: var(--hairline);
+  --surface: #f5f5f5;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-canvas-soft: var(--canvas-soft);
+  --color-canvas-light: var(--canvas-light);
+  --color-ink: var(--ink);
+  --color-brand: var(--brand);
+  --color-on-primary: var(--on-primary);
+  --color-ash: var(--ash);
+  --color-mute: var(--mute);
+  --color-graphite: var(--graphite);
+  --color-hairline-soft: var(--hairline-soft);
+  --color-hairline: var(--hairline);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-surface: var(--surface);
+  --container-content: 72rem;
+  --radius-app-xs: 3px;
+  --radius-app-md: 5px;
+  --radius-marketing: 12px;
+  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+.surface-dark {
+  --background: var(--canvas);
+  --foreground: var(--on-primary);
+  --muted: var(--ash);
+  --border: var(--hairline-soft);
+  --surface: var(--canvas-soft);
+}
+
+.surface-light {
+  --background: var(--canvas-light);
+  --foreground: var(--ink);
+  --muted: var(--mute);
+  --border: var(--hairline);
+  --surface: #f5f5f5;
+}
