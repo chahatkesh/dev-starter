@@ -1,0 +1,15 @@
+.git
+.husky/_
+.next
+.pnpm-store
+.vercel
+coverage
+node_modules
+out
+build
+dist
+secrets/*.enc.yaml
+packages/database/generated
+pnpm-lock.yaml
+next-env.d.ts
+*.tsbuildinfo

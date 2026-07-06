@@ -1,0 +1,26 @@
+procs:
+  # Local PostgreSQL via Docker, starting Docker first if needed.
+  database:
+    shell: "pnpm docker:dev"
+    cwd: "."
+    autostart: true
+    autorestart: false
+    stop: "SIGTERM"
+
+  # Main Next.js application. This repo intentionally has no landing/docs app.
+  main-app:
+    shell: "pnpm dev"
+    cwd: "."
+    autostart: true
+    autorestart: true
+    stop: "SIGTERM"
+
+  # Prisma Studio for inspecting local data.
+  database-studio:
+    shell: "pnpm db:studio"
+    cwd: "."
+    autostart: false
+    autorestart: false
+    stop: "SIGTERM"
+
+# Optional local overrides can live in mprocs.local.yaml, which is gitignored.
