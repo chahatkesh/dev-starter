@@ -1,0 +1,59 @@
+name: Engineering task
+description: Track operational work, technical debt, maintenance, or internal documentation.
+title: "[Task] "
+labels:
+  - "type:chore"
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      description: Primary product surface or system area, if known.
+      options:
+        - Main app
+        - Chart engine
+        - Location / timezone
+        - Workers
+        - CI / automation
+        - Infrastructure / deployment
+        - Database / schema
+        - Internal docs only
+        - Tests
+        - Unknown / not sure
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context and reason
+      description: What problem or risk requires this work now?
+    validations:
+      required: true
+  - type: textarea
+    id: deliverable
+    attributes:
+      label: Deliverable
+      description: Define the concrete result, not a vague activity.
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints and dependencies
+      description: Name behavior, compatibility, ownership, data or operational boundaries that must remain stable.
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification
+      description: How will a reviewer know this task is complete and safe?
+    validations:
+      required: true
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched open and closed issues for duplicates.
+          required: true
+        - label: I removed secrets, customer data and unnecessary personal information.
+          required: true

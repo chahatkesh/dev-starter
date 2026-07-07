@@ -1,0 +1,63 @@
+name: Configure SSH
+description: Configure an SSH host alias for deployment jobs.
+
+inputs:
+  host-alias:
+    description: Alias to write into ~/.ssh/config.
+    required: true
+  host:
+    description: SSH host name or IP address.
+    required: true
+  user:
+    description: SSH user.
+    required: true
+  private-key:
+    description: Private key used for SSH authentication.
+    required: true
+  port:
+    description: SSH port.
+    required: false
+    default: "22"
+  known-hosts:
+    description: Pinned known_hosts entry for the deployment host.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Write SSH configuration
+      shell: bash
+      env:
+        SSH_HOST_ALIAS: ${{ inputs.host-alias }}
+        SSH_HOST: ${{ inputs.host }}
+        SSH_USER: ${{ inputs.user }}
+        SSH_PRIVATE_KEY: ${{ inputs.private-key }}
+        SSH_PORT: ${{ inputs.port }}
+        SSH_KNOWN_HOSTS: ${{ inputs.known-hosts }}
+      run: |
+        set -euo pipefail
+
+        if [ -z "$SSH_KNOWN_HOSTS" ]; then
+          echo "known-hosts is required; refusing insecure deployment SSH host key discovery." >&2
+          exit 1
+        fi
+
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+
+        printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+
+        printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+        chmod 600 ~/.ssh/known_hosts
+
+        cat > ~/.ssh/config <<EOF
+        Host ${SSH_HOST_ALIAS}
+          HostName ${SSH_HOST}
+          User ${SSH_USER}
+          Port ${SSH_PORT}
+          IdentityFile ~/.ssh/deploy_key
+          ServerAliveInterval 30
+          ServerAliveCountMax 10
+          TCPKeepAlive yes
+        EOF

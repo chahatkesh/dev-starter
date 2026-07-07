@@ -1,0 +1,40 @@
+# Issue labeling rules. Applied by .github/workflows/issue-labeler.yml.
+# Labels must exist in .github/labels.yml so EndBug/label-sync assigns colors.
+
+title:
+  type:bug:
+    - '^\[Bug\]'
+  type:feature:
+    - '^\[Feature\]'
+  type:chore:
+    - '^\[Task\]'
+
+form_fields:
+  Affected area:
+    "Main app": area:app
+    "Chart engine": area:engine
+    "Location / timezone": area:location-timezone
+    "Workers": area:workers
+    "CI / automation": area:ci
+    "Infrastructure / deployment": area:infra
+    "Database / schema": area:database
+    "Internal docs only": area:docs
+    "Tests": area:tests
+
+body:
+  security:
+    - '(?i)\b(security|vulnerability|cve|secret leak|credential leak|auth bypass)\b'
+  risk:high:
+    - '(?i)\b(production outage|data loss|migration rollback|auth bypass|secret leak)\b'
+  risk:medium:
+    - '(?i)\b(user-visible|customer-facing|account|login|signup|session)\b'
+  area:engine:
+    - '(?i)\b(auth|session|login|signup|password|proxy)\b'
+  area:location-timezone:
+    - '(?i)\b(geocoding|timezone|dst|place search|latitude|longitude)\b'
+  area:database:
+    - '(?i)\b(prisma|schema change|migration)\b'
+  area:infra:
+    - '(?i)\b(deploy|deployment|docker|ec2|sops|secret)\b'
+  area:ci:
+    - '(?i)\b(github actions|ci pipeline|dependabot|labeler)\b'

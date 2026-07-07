@@ -1,0 +1,63 @@
+name: Dependabot Labels
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  sync-labels:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    uses: ./.github/workflows/reusable-sync-labels.yml
+
+  label:
+    name: Label Dependabot Pull Request
+    needs: sync-labels
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Apply Dependabot labels
+        env:
+          DEPENDENCY_GROUP: ${{ steps.metadata.outputs.dependency-group }}
+          DIRECTORY: ${{ steps.metadata.outputs.directory }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PACKAGE_ECOSYSTEM: ${{ steps.metadata.outputs.package-ecosystem }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          labels=("dependencies")
+
+          if [ "$PACKAGE_ECOSYSTEM" = "github-actions" ]; then
+            labels+=("area:ci")
+          elif [ "$DIRECTORY" = "/" ]; then
+            labels+=("area:app")
+          fi
+
+          if [[ "$DEPENDENCY_GROUP" == *security-updates* ]]; then
+            labels+=("security" "risk:high")
+          fi
+
+          for label in "${labels[@]}"; do
+            gh api \
+              --method POST \
+              "repos/$REPOSITORY/issues/$PR_NUMBER/labels" \
+              -f "labels[]=$label" \
+              >/dev/null
+          done

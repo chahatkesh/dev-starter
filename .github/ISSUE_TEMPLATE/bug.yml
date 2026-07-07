@@ -1,0 +1,86 @@
+name: Bug report
+description: Report reproducible incorrect product or engineering behavior.
+title: "[Bug] "
+labels:
+  - "type:bug"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include secrets, decrypted configuration, raw customer payloads, unnecessary PII, or private security-incident evidence.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Problem and impact
+      description: What is wrong, who is affected, and how severe is the impact?
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - Production
+        - Local development
+        - CI
+        - Unknown
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      description: Primary product surface or system area, if known.
+      options:
+        - Main app
+        - Chart engine
+        - Location / timezone
+        - Workers
+        - CI / automation
+        - Infrastructure / deployment
+        - Database / schema
+        - Internal docs only
+        - Tests
+        - Unknown / not sure
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Provide the smallest sanitized sequence that reproduces the problem.
+      placeholder: |
+        1. Open...
+        2. Enter...
+        3. Observe...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior and evidence
+      description: Include sanitized timestamps, request IDs, screenshots or logs when useful.
+    validations:
+      required: true
+  - type: textarea
+    id: regression
+    attributes:
+      label: Regression and recent changes
+      description: Did this work before? Name the last known-good version or relevant deployment if known.
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched open and closed issues for duplicates.
+          required: true
+        - label: I removed secrets, raw customer content and unnecessary personal data.
+          required: true
+        - label: This is not an active security incident requiring the private incident process.
+          required: true

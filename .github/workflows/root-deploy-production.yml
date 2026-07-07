@@ -1,0 +1,363 @@
+name: Root Deploy Production
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".env.example"
+      - ".dockerignore"
+      - ".github/actions/**"
+      - ".github/workflows/root-ci.yml"
+      - ".github/workflows/root-deploy-production.yml"
+      - "app/**"
+      - "components/**"
+      - "hooks/**"
+      - "infrastructure/**"
+      - "lib/**"
+      - "next.config.ts"
+      - "package.json"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "postcss.config.mjs"
+      - "public/**"
+      - "scripts/**"
+      - "secrets/production.enc.yaml"
+      - "services/**"
+      - "tests/**"
+      - "tsconfig.json"
+      - "vitest.config.ts"
+      - "workers/**"
+      - "!docs/**"
+      - "!**/*.md"
+  workflow_dispatch:
+
+concurrency:
+  group: root-deploy-production-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  APP_IMAGE: ghcr.io/${{ github.repository }}-app
+  NODE_VERSION: "24"
+  PNPM_VERSION: "10.34.4"
+  PRODUCTION_APP_URL: https://${{ secrets.PRODUCTION_APP_DOMAIN }}
+  NEXT_TELEMETRY_DISABLED: "1"
+  CI: "true"
+  APP_ENV: production
+  NODE_ENV: production
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/dev_starter_build
+  NEXT_PUBLIC_APP_NAME: Dev Starter
+  AUTH_SECRET: production-build-auth-secret-with-32-chars
+
+jobs:
+  quality:
+    name: Quality Gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: ./.github/actions/setup-pnpm
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm db:generate
+
+      - name: Check formatting
+        run: pnpm format:check
+
+      - name: Check schema migrations
+        run: pnpm db:check-migration
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Type check
+        run: pnpm type-check
+
+      - name: Test
+        run: pnpm test:unit
+
+  build-app-image:
+    name: Build App Image
+    needs: quality
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push app image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: infrastructure/dockerfiles/Dockerfile.prod
+          platforms: linux/amd64
+          push: true
+          provenance: false
+          tags: |
+            ${{ env.APP_IMAGE }}:${{ github.sha }}
+            ${{ env.APP_IMAGE }}:production
+          cache-from: type=gha,scope=dev-starter-app-production
+          cache-to: type=gha,scope=dev-starter-app-production,mode=max
+
+      - name: Verify pushed app image
+        env:
+          IMAGE_REF: ${{ env.APP_IMAGE }}:${{ github.sha }}
+        run: |
+          set -euo pipefail
+          docker pull "$IMAGE_REF"
+          docker run --rm --entrypoint sh "$IMAGE_REF" -c '
+            set -eu
+            test -f /app/server.js
+            test -d /app/.next/static
+            test -d /app/public
+          '
+
+      - name: Report high and critical app vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.APP_IMAGE }}:${{ github.sha }}
+          format: table
+          exit-code: "0"
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+
+      - name: Block critical app vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.APP_IMAGE }}:${{ github.sha }}
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL
+          skip-setup-trivy: true
+
+      - name: Image summary
+        run: |
+          {
+            echo "### App image"
+            echo ""
+            echo "- Image: \`${APP_IMAGE}:${GITHUB_SHA}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    name: Deploy to EC2
+    needs:
+      - build-app-image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    environment:
+      name: production
+      url: ${{ env.PRODUCTION_APP_URL }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Validate deployment inputs
+        env:
+          GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
+          GHCR_READ_USERNAME: ${{ secrets.GHCR_READ_USERNAME }}
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+          PRODUCTION_APP_DOMAIN: ${{ secrets.PRODUCTION_APP_DOMAIN }}
+          PRODUCTION_DEPLOY_USER: ${{ secrets.PRODUCTION_DEPLOY_USER }}
+          PRODUCTION_HOST: ${{ secrets.PRODUCTION_HOST }}
+          PRODUCTION_SSH_KNOWN_HOSTS: ${{ secrets.PRODUCTION_SSH_KNOWN_HOSTS }}
+          PRODUCTION_SSH_PRIVATE_KEY: ${{ secrets.PRODUCTION_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+
+          missing=0
+          for name in \
+            GHCR_READ_TOKEN \
+            GHCR_READ_USERNAME \
+            SOPS_AGE_KEY \
+            PRODUCTION_APP_DOMAIN \
+            PRODUCTION_DEPLOY_USER \
+            PRODUCTION_HOST \
+            PRODUCTION_SSH_KNOWN_HOSTS \
+            PRODUCTION_SSH_PRIVATE_KEY
+          do
+            if [ -z "${!name:-}" ]; then
+              echo "$name is required for production deployment." >&2
+              missing=1
+            fi
+          done
+
+          exit "$missing"
+
+      - name: Configure SSH
+        id: configure-ssh
+        uses: ./.github/actions/configure-ssh
+        with:
+          host-alias: dev-starter-production
+          host: ${{ secrets.PRODUCTION_HOST }}
+          user: ${{ secrets.PRODUCTION_DEPLOY_USER }}
+          private-key: ${{ secrets.PRODUCTION_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.PRODUCTION_SSH_PORT || '22' }}
+          known-hosts: ${{ secrets.PRODUCTION_SSH_KNOWN_HOSTS }}
+
+      - name: Install SOPS and age
+        run: |
+          set -euo pipefail
+          curl -fsSLO https://github.com/FiloSottile/age/releases/download/v1.1.1/age-v1.1.1-linux-amd64.tar.gz
+          tar xzf age-v1.1.1-linux-amd64.tar.gz
+          sudo mv age/age age/age-keygen /usr/local/bin/
+          curl -fsSLo sops https://github.com/getsops/sops/releases/download/v3.9.3/sops-v3.9.3.linux.amd64
+          sudo mv sops /usr/local/bin/sops
+          sudo chmod +x /usr/local/bin/sops
+
+      - name: Decrypt production env
+        env:
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$SOPS_AGE_KEY" > .age-key.txt
+          chmod 600 .age-key.txt
+          export SOPS_AGE_KEY_FILE=.age-key.txt
+          sops -d secrets/production.enc.yaml | awk -F': ' '{
+            key = $1
+            value = substr($0, index($0, ": ") + 2)
+            print key"="value
+          }' > .env.production
+          rm .age-key.txt
+          chmod 600 .env.production
+          echo "APP_IMAGE=${APP_IMAGE}:${GITHUB_SHA}" >> .env.production
+
+      - name: Masked env sanity check
+        run: |
+          awk -F= '/^[A-Za-z_][A-Za-z0-9_]*=/ {
+            if ($1 ~ /(SECRET|PASSWORD|TOKEN|KEY|DATABASE_URL|SOPS)/) {
+              print $1"=***"
+            } else {
+              print $1"=<set>"
+            }
+          }' .env.production | sort
+
+      - name: Transfer deployment files
+        run: |
+          set -euo pipefail
+          ssh dev-starter-production "mkdir -p ~/dev-starter/infrastructure/docker && chmod 750 ~/dev-starter"
+          scp infrastructure/docker/docker-compose.prod.yml dev-starter-production:dev-starter/infrastructure/docker/docker-compose.prod.yml
+          scp .env.production dev-starter-production:dev-starter/.env.production
+          rm .env.production
+
+      - name: Validate remote compose config
+        run: |
+          ssh dev-starter-production 'bash -seuo pipefail' <<'EOF'
+            cd ~/dev-starter
+            docker compose --env-file .env.production -f infrastructure/docker/docker-compose.prod.yml config >/dev/null
+          EOF
+
+      - name: Log in to GHCR on server
+        env:
+          GHCR_READ_USERNAME: ${{ secrets.GHCR_READ_USERNAME }}
+          GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
+        run: |
+          printf '%s\n' "$GHCR_READ_TOKEN" | ssh dev-starter-production "docker login ghcr.io -u '$GHCR_READ_USERNAME' --password-stdin"
+
+      - name: Clean up old Docker resources
+        run: |
+          ssh dev-starter-production 'bash -seuo pipefail' <<'EOF'
+            df -h /
+            docker image prune -f || true
+            docker container prune -f || true
+            docker images "ghcr.io/*/dev-starter-app" --format '{{.ID}} {{.CreatedAt}}' \
+              | tail -n +4 \
+              | awk '{ print $1 }' \
+              | xargs -r docker rmi -f || true
+            df -h /
+          EOF
+
+      - name: Pull image and restart app
+        run: |
+          ssh dev-starter-production 'bash -seuo pipefail' <<'EOF'
+            cd ~/dev-starter
+
+            compose() {
+              docker compose --env-file .env.production -f infrastructure/docker/docker-compose.prod.yml "$@"
+            }
+
+            compose pull app
+            compose up -d app
+          EOF
+
+      - name: Verify production health
+        run: |
+          ssh dev-starter-production 'bash -seuo pipefail' <<'EOF'
+            cd ~/dev-starter
+            app_port="$(awk -F= '$1 == "APP_PORT" { print $2 }' .env.production)"
+            app_port="${app_port:-3000}"
+
+            for attempt in $(seq 1 30); do
+              if curl -fsS --max-time 5 "http://127.0.0.1:${app_port}/api/health" >/dev/null; then
+                echo "App health check passed on attempt ${attempt}"
+                exit 0
+              fi
+              sleep 2
+            done
+
+            docker compose --env-file .env.production -f infrastructure/docker/docker-compose.prod.yml ps -a || true
+            docker compose --env-file .env.production -f infrastructure/docker/docker-compose.prod.yml logs --tail=80 app || true
+            exit 1
+          EOF
+
+      - name: Deployment diagnostics
+        if: always() && steps.configure-ssh.outcome == 'success'
+        run: |
+          ssh dev-starter-production <<'EOF'
+            cd ~/dev-starter || exit 0
+            echo "### Container status"
+            docker compose --env-file .env.production -f infrastructure/docker/docker-compose.prod.yml ps -a || true
+            echo "### Local app health"
+            app_port="$(awk -F= '$1 == "APP_PORT" { print $2 }' .env.production)"
+            app_port="${app_port:-3000}"
+            curl -sv --max-time 5 "http://127.0.0.1:${app_port}/api/health" >/dev/null || true
+            echo "### App logs"
+            docker compose --env-file .env.production -f infrastructure/docker/docker-compose.prod.yml logs --tail=80 app || true
+            echo "### Disk"
+            df -h / || true
+          EOF
+
+      - name: Deployment summary
+        run: |
+          {
+            echo "### Production deployment complete"
+            echo ""
+            echo "- App image: \`${APP_IMAGE}:${GITHUB_SHA}\`"
+            echo "- URL: \`${PRODUCTION_APP_URL}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

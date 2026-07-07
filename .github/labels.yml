@@ -1,0 +1,57 @@
+- name: area:app
+  color: "1d76db"
+  description: Main Next.js app, UI, hooks, shared lib, services, or public assets.
+- name: area:engine
+  color: "6f42c1"
+  description: Auth, sessions, account flows, or protected routes.
+- name: area:location-timezone
+  color: "0e8a16"
+  description: Geocoding, place search, timezone lookup, local-time conversion, or DST handling.
+- name: area:workers
+  color: "0052cc"
+  description: Long-running workers and worker support utilities.
+- name: area:ci
+  color: "5319e7"
+  description: GitHub Actions, hooks, repo automation, linting, testing, or build tooling.
+- name: area:infra
+  color: "0052cc"
+  description: Docker, deployment, infrastructure, secrets, or runtime operations.
+- name: area:database
+  color: "fbca04"
+  description: Prisma schema, migrations, database package, or seed data.
+- name: area:docs
+  color: "0075ca"
+  description: Documentation-only or mostly documentation changes.
+- name: area:tests
+  color: "bfdadc"
+  description: Test files, fixtures, or test infrastructure.
+- name: dependencies
+  color: "0366d6"
+  description: Dependency, package manager, or lockfile updates.
+- name: security
+  color: "b60205"
+  description: Security-sensitive code, dependency alerts, secrets, or scanners.
+- name: risk:high
+  color: "d93f0b"
+  description: Requires extra review due to deployment, data, auth, security, or calculation correctness risk.
+- name: risk:medium
+  color: "fbca04"
+  description: Touches shared behavior, user-visible flows, or calculation output.
+- name: type:bug
+  color: "d73a4a"
+  description: Fixes incorrect behavior.
+- name: type:feature
+  color: "a2eeef"
+  description: Adds new user-facing or developer-facing capability.
+- name: type:refactor
+  color: "c5def5"
+  description: Internal restructuring without intended behavior change.
+- name: type:docs
+  color: "0075ca"
+  description: Documentation updates.
+- name: type:chore
+  color: "ededed"
+  description: Maintenance, tooling, or non-product code changes.
+- name: release
+  color: "6f42c1"
+  description: Production release or production deployment coordination.
