@@ -1,0 +1,64 @@
+FROM node:24-alpine AS base
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+ENV PNPM_VERSION=10.34.4
+
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /workspace
+
+RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/database/package.json ./packages/database/package.json
+
+RUN pnpm install --frozen-lockfile
+
+FROM base AS builder
+WORKDIR /workspace
+
+COPY --from=deps /workspace/node_modules ./node_modules
+COPY app ./app
+COPY components ./components
+COPY hooks ./hooks
+COPY lib ./lib
+COPY packages ./packages
+COPY public ./public
+COPY services ./services
+COPY workers ./workers
+COPY next.config.ts package.json pnpm-lock.yaml pnpm-workspace.yaml postcss.config.mjs tsconfig.json ./
+
+RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
+
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV APP_ENV=production
+ENV NEXT_PUBLIC_APP_NAME="Dev Starter"
+
+RUN pnpm db:generate
+RUN pnpm build
+
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV APP_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+RUN addgroup --system --gid 1001 nodejs \
+  && adduser --system --uid 1001 nextjs
+
+COPY --from=builder /workspace/public ./public
+
+RUN mkdir .next && chown nextjs:nodejs .next
+
+COPY --from=builder --chown=nextjs:nodejs /workspace/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /workspace/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3000
+
+CMD ["node", "server.js"]
