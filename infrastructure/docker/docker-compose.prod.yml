@@ -1,0 +1,28 @@
+name: dev-starter-prod
+
+services:
+  app:
+    build:
+      context: ../..
+      dockerfile: infrastructure/dockerfiles/Dockerfile.prod
+    image: ${APP_IMAGE:-dev-starter:prod}
+    container_name: dev-starter-app-prod
+    restart: unless-stopped
+    env_file:
+      - ../../.env.production
+    environment:
+      APP_ENV: production
+      NODE_ENV: production
+      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-Dev Starter}
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/api/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
