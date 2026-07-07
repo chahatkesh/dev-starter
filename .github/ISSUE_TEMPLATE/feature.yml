@@ -1,0 +1,68 @@
+name: Feature request
+description: Propose a user, operator, or developer outcome.
+title: "[Feature] "
+labels:
+  - "type:feature"
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      description: Primary product surface or system area, if known.
+      options:
+        - Main app
+        - Chart engine
+        - Location / timezone
+        - Workers
+        - CI / automation
+        - Infrastructure / deployment
+        - Database / schema
+        - Internal docs only
+        - Tests
+        - Unknown / not sure
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+      description: Who is blocked, what are they trying to accomplish, and why does it matter?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: Describe observable value without prescribing unnecessary implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      placeholder: |
+        - Given..., when..., then...
+        - Failure state...
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and non-goals
+      description: State known boundaries and what should remain unchanged.
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies, risk and rollout
+      description: Include data, provider, security, migration or operational dependencies.
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched open and closed issues for duplicates.
+          required: true
+        - label: I described the user outcome, not only a preferred implementation.
+          required: true
+        - label: I removed secrets, customer data and unnecessary personal information.
+          required: true

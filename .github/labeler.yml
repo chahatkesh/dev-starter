@@ -1,0 +1,126 @@
+# Limit noisy area labels on very large PRs. Branch-based rules are unaffected.
+changed-files-labels-limit: 8
+
+release:
+  - any:
+      - head-branch: ["^release/"]
+
+area:app:
+  - changed-files:
+      - any-glob-to-any-file:
+          - app/**
+          - components/**
+          - hooks/**
+          - lib/**
+          - services/**
+          - public/**
+          - next.config.ts
+          - postcss.config.mjs
+          - tsconfig.json
+          - vitest.config.ts
+          - next-env.d.ts
+
+area:engine:
+  - changed-files:
+      - any-glob-to-any-file:
+          - lib/auth/**
+          - services/auth-service.ts
+          - proxy.ts
+          - app/(auth)/login/**
+          - app/(auth)/signup/**
+
+area:location-timezone:
+  - changed-files:
+      - any-glob-to-any-file:
+          - services/location/**
+          - services/timezone/**
+          - lib/location/**
+          - lib/timezone/**
+          - docs/**/location*
+          - docs/**/timezone*
+
+area:workers:
+  - changed-files:
+      - any-glob-to-any-file:
+          - workers/**
+          - lib/workers/**
+
+area:ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/**
+          - .husky/**
+          - scripts/check-*
+          - package.json
+          - pnpm-lock.yaml
+          - pnpm-workspace.yaml
+
+area:infra:
+  - changed-files:
+      - any-glob-to-any-file:
+          - infrastructure/**
+          - secrets/**
+          - .dockerignore
+          - .env.example
+          - Makefile
+
+area:database:
+  - changed-files:
+      - any-glob-to-any-file:
+          - packages/database/**
+
+area:docs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.md"
+          - docs/**
+          - README.md
+          - AGENTS.md
+          - "**/AGENTS.md"
+
+area:tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - tests/**
+          - vitest.config.ts
+          - coverage/**
+
+dependencies:
+  - any:
+      - head-branch: "^dependabot/"
+      - changed-files:
+          - any-glob-to-any-file:
+              - package.json
+              - pnpm-lock.yaml
+              - pnpm-workspace.yaml
+              - packages/*/package.json
+
+security:
+  - changed-files:
+      - any-glob-to-any-file:
+          - secrets/**
+          - app/api/**
+          - lib/env.ts
+          - .github/workflows/codeql.yml
+          - .github/dependabot.yml
+
+risk:high:
+  - changed-files:
+      - any-glob-to-any-file:
+          - secrets/**
+          - infrastructure/**
+          - .github/workflows/**
+          - packages/database/prisma/schema.prisma
+          - packages/database/prisma/migrations/**
+          - lib/env.ts
+          - engine/**
+          - packages/engine/**
+
+risk:medium:
+  - changed-files:
+      - any-glob-to-any-file:
+          - app/**
+          - components/**
+          - hooks/**
+          - services/**
+          - workers/**

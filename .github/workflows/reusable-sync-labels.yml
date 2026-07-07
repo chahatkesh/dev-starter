@@ -1,0 +1,34 @@
+name: Reusable Sync Labels
+
+on:
+  workflow_call:
+    inputs:
+      dry-run:
+        description: Preview label changes without writing them.
+        required: false
+        type: string
+        default: "false"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sync:
+    name: Sync Labels
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout label config
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github/labels.yml
+
+      - name: Sync labels
+        uses: EndBug/label-sync@v2
+        with:
+          config-file: .github/labels.yml
+          delete-other-labels: false
+          dry-run: ${{ inputs.dry-run }}
+          token: ${{ secrets.GITHUB_TOKEN }}

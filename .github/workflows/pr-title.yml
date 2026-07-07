@@ -1,0 +1,49 @@
+name: PR Title
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
+      - ready_for_review
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Conventional Title
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+
+    steps:
+      - name: Validate PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          set -euo pipefail
+
+          if [ "$PR_AUTHOR" = "dependabot[bot]" ]; then
+            echo "Dependabot PR title is exempt; Dependabot labels and commits are handled separately."
+            exit 0
+          fi
+
+          pattern='^(feat|fix|refactor|perf|test|docs|build|ci|chore|revert)(\([a-z0-9-]+\))?: [a-z0-9].{0,71}$|^release: [a-z0-9].{0,71}$'
+
+          if [[ "$PR_TITLE" =~ $pattern ]]; then
+            exit 0
+          fi
+
+          {
+            echo "PR title must use Conventional Commit format."
+            echo "Expected: <type>(<optional-scope>): <imperative summary>"
+            echo "Allowed types: feat, fix, refactor, perf, test, docs, build, ci, chore, revert"
+            echo "Example: feat(auth): add password reset flow"
+            echo "Actual: $PR_TITLE"
+          } >&2
+          exit 1

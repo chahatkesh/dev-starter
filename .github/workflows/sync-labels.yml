@@ -1,0 +1,31 @@
+name: Sync Labels
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Preview label changes without writing them.
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+  push:
+    branches:
+      - main
+    paths:
+      - .github/labels.yml
+  schedule:
+    # Reconcile label colors/descriptions if labels were auto-created in gray.
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sync:
+    uses: ./.github/workflows/reusable-sync-labels.yml
+    with:
+      dry-run: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs['dry-run'] || 'false' }}

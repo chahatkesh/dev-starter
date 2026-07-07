@@ -1,0 +1,28 @@
+# Default ownership for the repository.
+* @chahatkesh
+
+# CI/CD and repository governance.
+/.github/ @chahatkesh
+/.husky/ @chahatkesh
+
+# Infrastructure, deployment, and secrets.
+/infrastructure/ @chahatkesh
+/secrets/ @chahatkesh
+/.dockerignore @chahatkesh
+/.env.example @chahatkesh
+
+# Database schema, migrations, and generated client package.
+/packages/database/ @chahatkesh
+
+# Main app and runtime code.
+/app/ @chahatkesh
+/components/ @chahatkesh
+/hooks/ @chahatkesh
+/lib/ @chahatkesh
+/services/ @chahatkesh
+/workers/ @chahatkesh
+/scripts/ @chahatkesh
+
+# Internal engineering docs.
+/docs/ @chahatkesh
+/AGENTS.md @chahatkesh

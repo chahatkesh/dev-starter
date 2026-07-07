@@ -1,0 +1,36 @@
+name: Issue Labeler
+
+on:
+  issues:
+    types:
+      - opened
+      - edited
+      - reopened
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sync-labels:
+    uses: ./.github/workflows/reusable-sync-labels.yml
+
+  labeler:
+    name: Label Issue
+    needs: sync-labels
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout labeler config
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            .github/issue-labeler.yml
+            .github/scripts/apply_issue_labels.py
+
+      - name: Apply issue labels
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 .github/scripts/apply_issue_labels.py "${{ github.event.issue.number }}"
