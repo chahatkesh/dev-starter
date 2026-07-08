@@ -1,0 +1,54 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./**/.next/**)",
+      "Read(./**/node_modules/**)",
+      "Read(./packages/database/generated/**)",
+      "Read(./**/*.tsbuildinfo)",
+      "Read(./.age-key.txt)",
+      "Read(./age-key.txt)",
+      "Read(./**/.env)",
+      "Read(./**/.env.local)",
+      "Read(./**/.env.*.local)",
+      "Read(./**/.env.production)",
+      "Read(./**/*.pem)",
+      "Read(./secrets/*.enc.yaml)",
+      "Read(./secrets/**/*.enc.yaml)",
+      "Read(./coverage/**)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git *)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-destructive-git.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/large-read-guard.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/post-edit-lint.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

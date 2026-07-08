@@ -1,0 +1,57 @@
+{
+  "models": {
+    "sonnet": {
+      "input_per_million_usd": 3,
+      "output_per_million_usd": 15
+    }
+  },
+  "components": {
+    "orchestrator": {
+      "label": "Main orchestrator (survey + merge)",
+      "input_tokens": 70000,
+      "output_tokens": 22000,
+      "model": "sonnet",
+      "scopes": ["full", "quick"]
+    },
+    "workflow_mapper": {
+      "label": "workflow-mapper",
+      "input_tokens": 30000,
+      "output_tokens": 7000,
+      "model": "sonnet",
+      "scopes": ["full", "quick"]
+    },
+    "auditor": {
+      "label": "auditor (each)",
+      "input_tokens": 45000,
+      "output_tokens": 14000,
+      "model": "sonnet",
+      "scopes": ["full", "quick"],
+      "scales_with_repo": true
+    },
+    "github_issue_triage": {
+      "label": "github-issue-triage",
+      "input_tokens": 22000,
+      "output_tokens": 7000,
+      "model": "sonnet",
+      "scopes": ["full", "quick"]
+    },
+    "agent_memory_recall": {
+      "label": "agent memory recall",
+      "input_tokens": 12000,
+      "output_tokens": 3000,
+      "model": "sonnet",
+      "scopes": ["full", "quick"],
+      "optional": true
+    }
+  },
+  "auditor_counts": {
+    "full": 6,
+    "quick": 3
+  },
+  "repo_scale": {
+    "files_divisor": 350,
+    "min": 0.6,
+    "max": 2.0
+  },
+  "uncertainty_pct": 25
+}
