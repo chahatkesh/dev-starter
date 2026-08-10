@@ -26,9 +26,9 @@
   },
   "devDependencies": {
     "@types/node": "^20",
-    "@types/pg": "^8.20.0",
-    "prisma": "^7.8.0",
-    "tsx": "^4.22.4",
+    "@types/pg": "^8.20.4",
+    "prisma": "^7.9.1",
+    "tsx": "^4.23.9",
     "typescript": "^5"
   }
 }
